@@ -12,13 +12,23 @@ int main(int argc, char **argv)
         return EXIT_FAILURE;
     }
 
-    char file_in[MAX_CHARS] = { '\0' };
-    char file_out[MAX_CHARS] = { '\0' };
+    char fileIn[MAX_CHARS] = { '\0' };
+    char fileOut[MAX_CHARS] = { '\0' };
 
-    strcpy_s (file_in, MAX_CHARS, argv[1]);
-    strcpy_s (file_out, MAX_CHARS, argv[2]);
+    strcpy_s (fileIn, MAX_CHARS, argv[1]);
+    strcpy_s (fileOut, MAX_CHARS, argv[2]);
 
-    printf("%s - %s\n", file_in, file_out);
+    printf("%s - %s\n", fileIn, fileOut);
+
+    FILE *fp = fopen (fileIn, "rb");
+
+    if (fp == NULL)
+    {
+        printf ("Failed to open file!\n");
+        return EXIT_FAILURE;
+    }
+
+    fclose (fp);
 
     return EXIT_SUCCESS;
 }
