@@ -1,87 +1,139 @@
+#include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #define MAX_CHARS 20
 
-typedef struct BMPFILEHEADER
+#define BYTES_IN_PIXEL 3
+
+typedef struct BmpFileHeader
 {
-    __int16 header_field;
+  int16_t header_field;
+  int32_t bmp_size;
+  int32_t reserved;
+  int32_t bitmap_data_address;
+} BmpFileHeader;
 
-    __int32 BMP_size;
-
-    __int32 reserved;
-
-    __int32 bitmap_data_address;
-}
-BMPFILEHEADER;
-
-typedef struct BMPINFOHEADER
+typedef struct BmpInfoHeader
 {
-    __int32 header_size;
+  int32_t header_size;
+  int32_t width_in_pixel;
+  int32_t height_in_pixel;
+  int16_t color_planes;
+  int16_t bits_per_pixel;
+  int32_t compression_method;
+  int32_t image_size;
+  int32_t horizontal_resolution;
+  int32_t vertical_resolution;
+  int32_t colors_in_palette;
+  int32_t important_colors;
+} BmpInfoHeader;
 
-    __int32 width;
-
-    __int32 height;
-
-    __int16 color_planes;
-
-    __int16 bits_per_pixel;
-
-    __int32 compression_method;
-
-    __int32 image_size;
-
-    __int32 h_res;
-
-    __int32 v_res;
-
-    __int32 colors_in_palette;
-
-    __int32 important_colors;
-}
-BMPINFOHEADER;
-
-typedef struct PIXEL
+typedef struct Pixel
 {
-    __int8 blue;
-    __int8 green;
-    __int8 red;
-}
-PIXEL;
+    int8_t blue;
+    int8_t green;
+    int8_t red;
+} Pixel;
 
-
+int8_t ReadBmpHeader(
+    const char file_in[MAX_CHARS], 
+    BmpFileHeader *bmp_file_header, 
+    BmpInfoHeader *bmp_info_header);
 
 int main(int argc, char **argv)
 {
-    if (argc != 3)
-    {
-        printf ("Usage: <program> <input.bmp> <output.bmp>\n");
-        return EXIT_FAILURE;
-    }
+  if (argc != 3)
+  {
+    printf("Usage: <program> <input.bmp> <output.bmp>\n");
+    return EXIT_FAILURE;
+  }
 
-    char fileIn[MAX_CHARS] = { '\0' };
-    char fileOut[MAX_CHARS] = { '\0' };
+  char file_in[MAX_CHARS] = { '\0' };
+  char file_out[MAX_CHARS] = { '\0' };
 
-    strcpy_s (fileIn, MAX_CHARS, argv[1]);
-    strcpy_s (fileOut, MAX_CHARS, argv[2]);
+  strcpy_s(file_in, MAX_CHARS, argv[1]);
+  strcpy_s(file_out, MAX_CHARS, argv[2]);
 
-    printf("%s - %s\n", fileIn, fileOut);
+  BmpFileHeader bmp_file_header = { 0 };
+  BmpInfoHeader bmp_info_header = { 0 };
 
+  int8_t is_error = ReadBmpHeader(file_in, &bmp_file_header, &bmp_info_header);
 
-    BMPFILEHEADER bmp_file_header = { 0 };
-    BMPINFOHEADER bmp_info_header = { 0 };
+  if (is_error == EXIT_FAILURE) return EXIT_FAILURE;
+  
+  return EXIT_SUCCESS;
+}
 
+int8_t ReadBmpHeader(
+    const char file_in[MAX_CHARS], 
+    BmpFileHeader *bmp_file_header, 
+    BmpInfoHeader *bmp_info_header) 
+{
+  FILE *fp = fopen(file_in, "rb");
 
-    FILE *fp = fopen (fileIn, "rb");
+  if (fp == NULL)
+  {
+    printf("Failed to open file!\n");
+    return EXIT_FAILURE;
+  }
 
-    if (fp == NULL)
-    {
-        printf ("Failed to open file!\n");
-        return EXIT_FAILURE;
-    }
+  fread(&bmp_file_header->header_field,
+        sizeof(bmp_file_header->header_field), 1, fp);
 
-    fclose (fp);
+  if (bmp_file_header->header_field != 0x4D42)
+  {
+    printf("File is not a BMP image!\n");
+    return EXIT_FAILURE;
+  }
 
-    return EXIT_SUCCESS;
+  fread(&bmp_file_header->header_field,
+        sizeof(bmp_file_header->header_field), 1, fp);
+
+  fread(&bmp_file_header->bmp_size, sizeof(bmp_file_header->bmp_size), 1, fp);
+  
+  fread(&bmp_file_header->reserved,
+        sizeof(bmp_file_header->reserved), 1, fp);
+
+  fread(&bmp_file_header->bitmap_data_address,
+        sizeof(bmp_file_header->bitmap_data_address), 1, fp);
+
+  fread(&bmp_info_header->header_size,
+        sizeof(bmp_info_header->header_size), 1, fp);
+
+  fread(&bmp_info_header->width_in_pixel,
+        sizeof(bmp_info_header->width_in_pixel), 1, fp);
+
+  fread(&bmp_info_header->height_in_pixel,
+        sizeof(bmp_info_header->height_in_pixel), 1, fp);
+
+  fread(&bmp_info_header->color_planes,
+        sizeof(bmp_info_header->color_planes), 1, fp);
+
+  fread(&bmp_info_header->bits_per_pixel,
+        sizeof(bmp_info_header->bits_per_pixel), 1, fp);
+
+  fread(&bmp_info_header->compression_method,
+        sizeof(bmp_info_header->compression_method), 1, fp);
+
+  fread(&bmp_info_header->image_size,
+        sizeof(bmp_info_header->image_size), 1, fp);
+
+  fread(&bmp_info_header->horizontal_resolution, 
+        sizeof(bmp_info_header->horizontal_resolution), 1, fp);
+
+  fread(&bmp_info_header->vertical_resolution, 
+        sizeof(bmp_info_header->vertical_resolution), 1, fp);
+
+  fread(&bmp_info_header->colors_in_palette, 
+        sizeof(bmp_info_header->colors_in_palette), 1, fp);
+
+  fread(&bmp_info_header->important_colors, 
+        sizeof(bmp_info_header->important_colors), 1, fp);
+
+  fclose(fp);
+
+  return EXIT_SUCCESS;  
 }
