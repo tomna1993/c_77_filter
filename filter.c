@@ -53,6 +53,12 @@ int8_t ReadPixelArray(
     BmpInfoHeader *bmp_info_header,
     Pixel *pixel_array);
 
+int8_t CreateBmp(
+    const char file_out[MAX_CHARS], 
+    BmpFileHeader *bmp_file_header, 
+    BmpInfoHeader *bmp_info_header,
+    Pixel *pixel_array);
+
 int main(int argc, char **argv)
 {
   if (argc != 3)
@@ -80,7 +86,13 @@ int main(int argc, char **argv)
       bmp_info_header.width_in_pixel * bmp_info_header.height_in_pixel,
       sizeof(Pixel));
   
-  ReadPixelArray(file_in, &bmp_file_header, &bmp_info_header, pixel_array);
+  is_error = ReadPixelArray(file_in, &bmp_file_header, &bmp_info_header, pixel_array);
+
+  if (is_error == EXIT_FAILURE) return EXIT_FAILURE;
+
+  is_error = CreateBmp(file_out, &bmp_file_header, &bmp_info_header, pixel_array);
+
+  if (is_error == EXIT_FAILURE) return EXIT_FAILURE;
 
   return EXIT_SUCCESS;
 }
@@ -107,7 +119,8 @@ int8_t ReadBmpHeader(
     return EXIT_FAILURE;
   }
 
-  fread(&bmp_file_header->bmp_size, sizeof(bmp_file_header->bmp_size), 1, fp);
+  fread(&bmp_file_header->bmp_size,
+        sizeof(bmp_file_header->bmp_size), 1, fp);
   
   fread(&bmp_file_header->reserved,
         sizeof(bmp_file_header->reserved), 1, fp);
@@ -199,7 +212,7 @@ int8_t ReadPixelArray(
 
   for (int row = 0; row < bmp_info_header->height_in_pixel; ++row)
   {
-    fseek(fp, padding_bytes, SEEK_CUR);
+    if (row > 0) fseek(fp, padding_bytes, SEEK_CUR);
 
     for (int coll = 0; coll < bmp_info_header->width_in_pixel; ++coll)
     {
@@ -207,6 +220,89 @@ int8_t ReadPixelArray(
           sizeof(Pixel), 1, fp);
     }
   }
+
+  fclose(fp);
+
+  return EXIT_SUCCESS;  
+}
+
+int8_t CreateBmp(
+    const char file_out[MAX_CHARS], 
+    BmpFileHeader *bmp_file_header, 
+    BmpInfoHeader *bmp_info_header,
+    Pixel *pixel_array) 
+{
+  FILE *fp = fopen(file_out, "wb");
+
+  if (fp == NULL)
+  {
+    printf("Failed to open file!\n");
+    return EXIT_FAILURE;
+  }
+
+  fwrite(&bmp_file_header->header_field,
+        sizeof(bmp_file_header->header_field), 1, fp);
+
+  fwrite(&bmp_file_header->bmp_size,
+        sizeof(bmp_file_header->bmp_size), 1, fp);
+  
+  fwrite(&bmp_file_header->reserved,
+        sizeof(bmp_file_header->reserved), 1, fp);
+
+  fwrite(&bmp_file_header->bitmap_data_address,
+        sizeof(bmp_file_header->bitmap_data_address), 1, fp);
+
+  fwrite(&bmp_info_header->header_size,
+        sizeof(bmp_info_header->header_size), 1, fp);
+
+  fwrite(&bmp_info_header->width_in_pixel,
+        sizeof(bmp_info_header->width_in_pixel), 1, fp);
+
+  fwrite(&bmp_info_header->height_in_pixel,
+        sizeof(bmp_info_header->height_in_pixel), 1, fp);
+
+  fwrite(&bmp_info_header->color_planes,
+        sizeof(bmp_info_header->color_planes), 1, fp);
+
+  fwrite(&bmp_info_header->bits_per_pixel,
+        sizeof(bmp_info_header->bits_per_pixel), 1, fp);
+
+  fwrite(&bmp_info_header->compression_method,
+        sizeof(bmp_info_header->compression_method), 1, fp);
+
+  fwrite(&bmp_info_header->image_size,
+        sizeof(bmp_info_header->image_size), 1, fp);
+
+  fwrite(&bmp_info_header->horizontal_resolution, 
+        sizeof(bmp_info_header->horizontal_resolution), 1, fp);
+
+  fwrite(&bmp_info_header->vertical_resolution, 
+        sizeof(bmp_info_header->vertical_resolution), 1, fp);
+
+  fwrite(&bmp_info_header->colors_in_palette, 
+        sizeof(bmp_info_header->colors_in_palette), 1, fp);
+
+  fwrite(&bmp_info_header->important_colors, 
+        sizeof(bmp_info_header->important_colors), 1, fp);
+
+  int32_t padding_bytes = (bmp_info_header->width_in_pixel * sizeof(Pixel)) % 4;
+
+  if (padding_bytes > 0) padding_bytes = 4 - padding_bytes;
+
+  int8_t padding_value = 0;
+
+  for (int row = 0; row < bmp_info_header->height_in_pixel; ++row)
+  {
+    if (row > 0) fwrite(&padding_value, sizeof(int8_t), padding_bytes, fp);
+
+    for (int coll = 0; coll < bmp_info_header->width_in_pixel; ++coll)
+    {
+      fwrite(pixel_array + (row * bmp_info_header->width_in_pixel) + coll,
+            sizeof(Pixel), 1, fp);
+    }
+  }
+    
+  fwrite(&padding_value, sizeof(int8_t), padding_bytes, fp);
 
   fclose(fp);
 
