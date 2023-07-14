@@ -59,6 +59,11 @@ int8_t CreateBmp(
     BmpInfoHeader *bmp_info_header,
     Pixel *pixel_array);
 
+void FilterGrayscale( 
+    BmpFileHeader *bmp_file_header, 
+    BmpInfoHeader *bmp_info_header,
+    Pixel *pixel_array);
+
 int main(int argc, char **argv)
 {
   if (argc != 3)
@@ -89,6 +94,8 @@ int main(int argc, char **argv)
   is_error = ReadPixelArray(file_in, &bmp_file_header, &bmp_info_header, pixel_array);
 
   if (is_error == EXIT_FAILURE) return EXIT_FAILURE;
+
+  FilterGrayscale(&bmp_file_header, &bmp_info_header, pixel_array);
 
   is_error = CreateBmp(file_out, &bmp_file_header, &bmp_info_header, pixel_array);
 
@@ -217,7 +224,7 @@ int8_t ReadPixelArray(
     for (int coll = 0; coll < bmp_info_header->width_in_pixel; ++coll)
     {
       fread(pixel_array + (row * bmp_info_header->width_in_pixel) + coll,
-          sizeof(Pixel), 1, fp);
+            sizeof(Pixel), 1, fp);
     }
   }
 
@@ -291,6 +298,8 @@ int8_t CreateBmp(
 
   int8_t padding_value = 0;
 
+  fseek(fp, bmp_file_header->bitmap_data_address, SEEK_SET);
+
   for (int row = 0; row < bmp_info_header->height_in_pixel; ++row)
   {
     if (row > 0) fwrite(&padding_value, sizeof(int8_t), padding_bytes, fp);
@@ -308,3 +317,30 @@ int8_t CreateBmp(
 
   return EXIT_SUCCESS;  
 }
+
+void FilterGrayscale( 
+    BmpFileHeader *bmp_file_header, 
+    BmpInfoHeader *bmp_info_header,
+    Pixel *pixel_array)
+{
+  Pixel *pixel_ptr = NULL;
+
+  int8_t average = 0;
+
+  for (int row = 0; row < bmp_info_header->height_in_pixel; ++row)
+  {
+    for (int coll = 0; coll < bmp_info_header->width_in_pixel; ++coll)
+    {
+      pixel_ptr = (pixel_array + (row * bmp_info_header->width_in_pixel) + coll);
+
+      average = 0;
+      average = (pixel_ptr->blue + pixel_ptr->green + pixel_ptr->red) / (int8_t)sizeof(Pixel);
+
+      pixel_ptr->blue = pixel_ptr->green = pixel_ptr->red = average;
+    }
+  }
+
+  pixel_ptr = NULL;
+}
+
+
