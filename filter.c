@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define MAX_CHARS 20
+#define MAX_CHARS 50
 
 #define BYTES_IN_PIXEL 3
 
@@ -43,6 +43,16 @@ int8_t ReadBmpHeader(
     BmpFileHeader *bmp_file_header, 
     BmpInfoHeader *bmp_info_header);
 
+void PrintBmpHeader( 
+    BmpFileHeader *bmp_file_header, 
+    BmpInfoHeader *bmp_info_header);
+
+int8_t ReadPixelArray(
+    const char file_in[MAX_CHARS], 
+    BmpFileHeader *bmp_file_header, 
+    BmpInfoHeader *bmp_info_header,
+    Pixel *pixel_array);
+
 int main(int argc, char **argv)
 {
   if (argc != 3)
@@ -63,7 +73,15 @@ int main(int argc, char **argv)
   int8_t is_error = ReadBmpHeader(file_in, &bmp_file_header, &bmp_info_header);
 
   if (is_error == EXIT_FAILURE) return EXIT_FAILURE;
+
+  PrintBmpHeader(&bmp_file_header, &bmp_info_header);
+
+  Pixel *pixel_array = (Pixel *)calloc(
+      bmp_info_header.width_in_pixel * bmp_info_header.height_in_pixel,
+      sizeof(Pixel));
   
+  ReadPixelArray(file_in, &bmp_file_header, &bmp_info_header, pixel_array);
+
   return EXIT_SUCCESS;
 }
 
@@ -88,9 +106,6 @@ int8_t ReadBmpHeader(
     printf("File is not a BMP image!\n");
     return EXIT_FAILURE;
   }
-
-  fread(&bmp_file_header->header_field,
-        sizeof(bmp_file_header->header_field), 1, fp);
 
   fread(&bmp_file_header->bmp_size, sizeof(bmp_file_header->bmp_size), 1, fp);
   
@@ -132,6 +147,66 @@ int8_t ReadBmpHeader(
 
   fread(&bmp_info_header->important_colors, 
         sizeof(bmp_info_header->important_colors), 1, fp);
+
+  fclose(fp);
+
+  return EXIT_SUCCESS;  
+}
+
+void PrintBmpHeader( 
+    BmpFileHeader *bmp_file_header, 
+    BmpInfoHeader *bmp_info_header) 
+{
+  printf("Header field: %x\n", bmp_file_header->header_field);
+  printf("File size: %i\n", bmp_file_header->bmp_size);
+  printf("Bitmap data address: %x\n", bmp_file_header->bitmap_data_address);
+
+  printf("Header size: %i\n", bmp_info_header->header_size);
+  printf("Width in pixel: %i\n", bmp_info_header->width_in_pixel);
+  printf("Height in pixel: %i\n", bmp_info_header->height_in_pixel);
+  printf("Color planes: %i\n", bmp_info_header->color_planes);
+  printf("Bits per pixel: %i\n", bmp_info_header->bits_per_pixel);
+  printf("Compression method: %i\n", bmp_info_header->compression_method);
+  printf("Image size: %i\n", bmp_info_header->image_size);
+  printf("Horizontal resolution: %i\n", bmp_info_header->horizontal_resolution);
+  printf("Vertical resolution: %i\n", bmp_info_header->vertical_resolution);
+  printf("Colors in palette: %i\n", bmp_info_header->colors_in_palette);
+  printf("Important colors: %i\n", bmp_info_header->important_colors);
+}
+
+int8_t ReadPixelArray(
+    const char file_in[MAX_CHARS], 
+    BmpFileHeader *bmp_file_header, 
+    BmpInfoHeader *bmp_info_header,
+    Pixel *pixel_array) 
+{
+  FILE *fp = fopen(file_in, "rb");
+
+  if (fp == NULL)
+  {
+    printf("Failed to open file!\n");
+    return EXIT_FAILURE;
+  }
+
+  fseek(fp, bmp_file_header->bitmap_data_address, SEEK_SET);
+
+  int32_t padding_bytes = (bmp_info_header->width_in_pixel * sizeof(Pixel)) % 4;
+
+  if (padding_bytes > 0)
+  {
+    padding_bytes = 4 - padding_bytes;
+  }
+
+  for (int row = 0; row < bmp_info_header->height_in_pixel; ++row)
+  {
+    fseek(fp, padding_bytes, SEEK_CUR);
+
+    for (int coll = 0; coll < bmp_info_header->width_in_pixel; ++coll)
+    {
+      fread(pixel_array + (row * bmp_info_header->width_in_pixel) + coll,
+          sizeof(Pixel), 1, fp);
+    }
+  }
 
   fclose(fp);
 
