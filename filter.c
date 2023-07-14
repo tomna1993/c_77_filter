@@ -33,9 +33,9 @@ typedef struct BmpInfoHeader
 
 typedef struct Pixel
 {
-    int8_t blue;
-    int8_t green;
-    int8_t red;
+    uint8_t blue;
+    uint8_t green;
+    uint8_t red;
 } Pixel;
 
 int8_t ReadBmpHeader(
@@ -60,6 +60,11 @@ int8_t CreateBmp(
     Pixel *pixel_array);
 
 void FilterGrayscale( 
+    BmpFileHeader *bmp_file_header, 
+    BmpInfoHeader *bmp_info_header,
+    Pixel *pixel_array);
+
+void FilterSepia( 
     BmpFileHeader *bmp_file_header, 
     BmpInfoHeader *bmp_info_header,
     Pixel *pixel_array);
@@ -95,7 +100,9 @@ int main(int argc, char **argv)
 
   if (is_error == EXIT_FAILURE) return EXIT_FAILURE;
 
-  FilterGrayscale(&bmp_file_header, &bmp_info_header, pixel_array);
+  // FilterGrayscale(&bmp_file_header, &bmp_info_header, pixel_array);
+
+  FilterSepia(&bmp_file_header, &bmp_info_header, pixel_array);
 
   is_error = CreateBmp(file_out, &bmp_file_header, &bmp_info_header, pixel_array);
 
@@ -343,4 +350,44 @@ void FilterGrayscale(
   pixel_ptr = NULL;
 }
 
+void FilterSepia( 
+    BmpFileHeader *bmp_file_header, 
+    BmpInfoHeader *bmp_info_header,
+    Pixel *pixel_array)
+{
+  Pixel *pixel_ptr = NULL;
 
+  uint16_t sepia_blue;
+  uint16_t sepia_green;
+  uint16_t sepia_red;
+
+  for (int row = 0; row < bmp_info_header->height_in_pixel; ++row)
+  {
+    for (int coll = 0; coll < bmp_info_header->width_in_pixel; ++coll)
+    {
+      pixel_ptr = (pixel_array + (row * bmp_info_header->width_in_pixel) + coll);
+
+      sepia_blue = (uint16_t)((pixel_ptr->red * 0.272) +
+                              (pixel_ptr->green * 0.534) +
+                              (pixel_ptr->blue * 0.131));
+      
+      sepia_green = (uint16_t)((pixel_ptr->red * 0.349) +
+                              (pixel_ptr->green * 0.686) +
+                              (pixel_ptr->blue * 0.168));
+      
+      sepia_red = (uint16_t)((pixel_ptr->red * 0.393) +
+                            (pixel_ptr->green * 0.769) +
+                            (pixel_ptr->blue * 0.189));
+
+      if (sepia_blue > 0xFF) sepia_blue = 0xFF;
+      if (sepia_green > 0xFF) sepia_green = 0xFF;
+      if (sepia_red > 0xFF) sepia_red = 0xFF;
+
+      pixel_ptr->blue = sepia_blue;
+      pixel_ptr->green = sepia_green;
+      pixel_ptr->red = sepia_red;
+    }
+  }
+
+  pixel_ptr = NULL;
+}
