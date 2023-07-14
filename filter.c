@@ -344,7 +344,7 @@ void FilterGrayscale(
 {
   Pixel *pixel_ptr = NULL;
 
-  int8_t average = 0;
+  uint8_t average = 0;
 
   int32_t height_in_pixel = bmp_info_header->height_in_pixel;
   
