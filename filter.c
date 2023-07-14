@@ -92,8 +92,12 @@ int main(int argc, char **argv)
 
   PrintBmpHeader(&bmp_file_header, &bmp_info_header);
 
+  int32_t height_in_pixel = bmp_info_header.height_in_pixel;
+  
+  if (height_in_pixel < 0) height_in_pixel *= -1;
+
   Pixel *pixel_array = (Pixel *)calloc(
-      bmp_info_header.width_in_pixel * bmp_info_header.height_in_pixel,
+      bmp_info_header.width_in_pixel * height_in_pixel,
       sizeof(Pixel));
   
   is_error = ReadPixelArray(file_in, &bmp_file_header, &bmp_info_header, pixel_array);
@@ -224,7 +228,11 @@ int8_t ReadPixelArray(
     padding_bytes = 4 - padding_bytes;
   }
 
-  for (int row = 0; row < bmp_info_header->height_in_pixel; ++row)
+  int32_t height_in_pixel = bmp_info_header->height_in_pixel;
+  
+  if (height_in_pixel < 0) height_in_pixel *= -1;
+
+  for (int row = 0; row < height_in_pixel; ++row)
   {
     if (row > 0) fseek(fp, padding_bytes, SEEK_CUR);
 
@@ -307,7 +315,11 @@ int8_t CreateBmp(
 
   fseek(fp, bmp_file_header->bitmap_data_address, SEEK_SET);
 
-  for (int row = 0; row < bmp_info_header->height_in_pixel; ++row)
+  int32_t height_in_pixel = bmp_info_header->height_in_pixel;
+  
+  if (height_in_pixel < 0) height_in_pixel *= -1;
+
+  for (int row = 0; row < height_in_pixel; ++row)
   {
     if (row > 0) fwrite(&padding_value, sizeof(int8_t), padding_bytes, fp);
 
@@ -334,7 +346,11 @@ void FilterGrayscale(
 
   int8_t average = 0;
 
-  for (int row = 0; row < bmp_info_header->height_in_pixel; ++row)
+  int32_t height_in_pixel = bmp_info_header->height_in_pixel;
+  
+  if (height_in_pixel < 0) height_in_pixel *= -1;
+
+  for (int row = 0; row < height_in_pixel; ++row)
   {
     for (int coll = 0; coll < bmp_info_header->width_in_pixel; ++coll)
     {
@@ -361,7 +377,11 @@ void FilterSepia(
   uint16_t sepia_green;
   uint16_t sepia_red;
 
-  for (int row = 0; row < bmp_info_header->height_in_pixel; ++row)
+  int32_t height_in_pixel = bmp_info_header->height_in_pixel;
+  
+  if (height_in_pixel < 0) height_in_pixel *= -1;
+
+  for (int row = 0; row < height_in_pixel; ++row)
   {
     for (int coll = 0; coll < bmp_info_header->width_in_pixel; ++coll)
     {
