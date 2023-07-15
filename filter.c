@@ -46,46 +46,38 @@ typedef enum EditMode
   save_and_exit
 } EditMode;
 
-int8_t ReadBmpHeader(
-    const char file_in[MAX_CHARS], 
-    BmpFileHeader *bmp_file_header, 
-    BmpInfoHeader *bmp_info_header);
+int8_t ReadBmpHeader(const char file_in[MAX_CHARS], 
+                    BmpFileHeader *bmp_file_header, 
+                    BmpInfoHeader *bmp_info_header);
 
-void PrintBmpHeader( 
-    BmpFileHeader *bmp_file_header, 
-    BmpInfoHeader *bmp_info_header);
+void PrintBmpHeader(BmpFileHeader *bmp_file_header, 
+                    BmpInfoHeader *bmp_info_header);
 
-int8_t ReadPixelArray(
-    const char file_in[MAX_CHARS], 
-    BmpFileHeader *bmp_file_header, 
-    BmpInfoHeader *bmp_info_header,
-    Pixel *pixel_array);
+int8_t ReadPixelArray(const char file_in[MAX_CHARS], 
+                      BmpFileHeader *bmp_file_header, 
+                      BmpInfoHeader *bmp_info_header,
+                      Pixel *pixel_array);
 
-int8_t CreateBmp(
-    const char file_out[MAX_CHARS], 
-    BmpFileHeader *bmp_file_header, 
-    BmpInfoHeader *bmp_info_header,
-    Pixel *pixel_array);
+int8_t CreateBmp(const char file_out[MAX_CHARS], 
+                BmpFileHeader *bmp_file_header, 
+                BmpInfoHeader *bmp_info_header,
+                Pixel *pixel_array);
 
-void FilterGrayscale( 
-    BmpFileHeader *bmp_file_header, 
-    BmpInfoHeader *bmp_info_header,
-    Pixel *pixel_array);
+void FilterGrayscale(BmpFileHeader *bmp_file_header, 
+                    BmpInfoHeader *bmp_info_header,
+                    Pixel *pixel_array);
 
-void FilterSepia( 
-    BmpFileHeader *bmp_file_header, 
-    BmpInfoHeader *bmp_info_header,
-    Pixel *pixel_array);
+void FilterSepia(BmpFileHeader *bmp_file_header, 
+                BmpInfoHeader *bmp_info_header,
+                Pixel *pixel_array);
 
-void FilterBlur( 
-    BmpFileHeader *bmp_file_header, 
-    BmpInfoHeader *bmp_info_header,
-    Pixel *pixel_array);
+void FilterBlur(BmpFileHeader *bmp_file_header, 
+                BmpInfoHeader *bmp_info_header,
+                Pixel *pixel_array);
 
-void FilterEdges( 
-    BmpFileHeader *bmp_file_header, 
-    BmpInfoHeader *bmp_info_header,
-    Pixel *pixel_array);
+void FilterEdges(BmpFileHeader *bmp_file_header, 
+                BmpInfoHeader *bmp_info_header,
+                Pixel *pixel_array);
 
 int main(int argc, char **argv)
 {
@@ -195,10 +187,9 @@ int main(int argc, char **argv)
   return EXIT_SUCCESS;
 }
 
-int8_t ReadBmpHeader(
-    const char file_in[MAX_CHARS], 
-    BmpFileHeader *bmp_file_header, 
-    BmpInfoHeader *bmp_info_header) 
+int8_t ReadBmpHeader(const char file_in[MAX_CHARS], 
+                    BmpFileHeader *bmp_file_header, 
+                    BmpInfoHeader *bmp_info_header) 
 {
   FILE *fp = fopen(file_in, "rb");
 
@@ -264,9 +255,8 @@ int8_t ReadBmpHeader(
   return EXIT_SUCCESS;  
 }
 
-void PrintBmpHeader( 
-    BmpFileHeader *bmp_file_header, 
-    BmpInfoHeader *bmp_info_header) 
+void PrintBmpHeader(BmpFileHeader *bmp_file_header, 
+                    BmpInfoHeader *bmp_info_header) 
 {
   printf("Header field: %x\n", bmp_file_header->header_field);
   printf("File size: %i\n", bmp_file_header->bmp_size);
@@ -285,11 +275,10 @@ void PrintBmpHeader(
   printf("Important colors: %i\n", bmp_info_header->important_colors);
 }
 
-int8_t ReadPixelArray(
-    const char file_in[MAX_CHARS], 
-    BmpFileHeader *bmp_file_header, 
-    BmpInfoHeader *bmp_info_header,
-    Pixel *pixel_array) 
+int8_t ReadPixelArray(const char file_in[MAX_CHARS], 
+                      BmpFileHeader *bmp_file_header, 
+                      BmpInfoHeader *bmp_info_header,
+                      Pixel *pixel_array) 
 {
   FILE *fp = fopen(file_in, "rb");
 
@@ -328,11 +317,10 @@ int8_t ReadPixelArray(
   return EXIT_SUCCESS;  
 }
 
-int8_t CreateBmp(
-    const char file_out[MAX_CHARS], 
-    BmpFileHeader *bmp_file_header, 
-    BmpInfoHeader *bmp_info_header,
-    Pixel *pixel_array) 
+int8_t CreateBmp(const char file_out[MAX_CHARS], 
+                BmpFileHeader *bmp_file_header, 
+                BmpInfoHeader *bmp_info_header,
+                Pixel *pixel_array) 
 {
   FILE *fp = fopen(file_out, "wb");
 
@@ -417,10 +405,9 @@ int8_t CreateBmp(
   return EXIT_SUCCESS;  
 }
 
-void FilterGrayscale( 
-    BmpFileHeader *bmp_file_header, 
-    BmpInfoHeader *bmp_info_header,
-    Pixel *pixel_array)
+void FilterGrayscale(BmpFileHeader *bmp_file_header, 
+                    BmpInfoHeader *bmp_info_header,
+                    Pixel *pixel_array)
 {
   Pixel *pixel_ptr = NULL;
 
@@ -445,10 +432,9 @@ void FilterGrayscale(
   pixel_ptr = NULL;
 }
 
-void FilterSepia( 
-    BmpFileHeader *bmp_file_header, 
-    BmpInfoHeader *bmp_info_header,
-    Pixel *pixel_array)
+void FilterSepia(BmpFileHeader *bmp_file_header, 
+                BmpInfoHeader *bmp_info_header,
+                Pixel *pixel_array)
 {
   Pixel *pixel_ptr = NULL;
 
@@ -487,10 +473,9 @@ void FilterSepia(
   pixel_ptr = NULL;
 }
 
-void FilterBlur( 
-    BmpFileHeader *bmp_file_header, 
-    BmpInfoHeader *bmp_info_header,
-    Pixel *pixel_array)
+void FilterBlur(BmpFileHeader *bmp_file_header, 
+                BmpInfoHeader *bmp_info_header,
+                Pixel *pixel_array)
 {
   int32_t height_in_pixel = bmp_info_header->height_in_pixel;
   
@@ -557,10 +542,9 @@ void FilterBlur(
   pixel_ptr = NULL;
 }
 
-void FilterEdges( 
-    BmpFileHeader *bmp_file_header, 
-    BmpInfoHeader *bmp_info_header,
-    Pixel *pixel_array)
+void FilterEdges(BmpFileHeader *bmp_file_header, 
+                BmpInfoHeader *bmp_info_header,
+                Pixel *pixel_array)
 {
   int32_t height_in_pixel = bmp_info_header->height_in_pixel;
   
