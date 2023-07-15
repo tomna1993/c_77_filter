@@ -119,9 +119,9 @@ int main(int argc, char **argv)
 
   // FilterSepia(&bmp_file_header, &bmp_info_header, pixel_array);
 
-  // FilterBlur(&bmp_file_header, &bmp_info_header, pixel_array);
+  FilterBlur(&bmp_file_header, &bmp_info_header, pixel_array);
 
-  FilterEdges(&bmp_file_header, &bmp_info_header, pixel_array);
+  // FilterEdges(&bmp_file_header, &bmp_info_header, pixel_array);
 
   is_error = CreateBmp(file_out, &bmp_file_header, &bmp_info_header, pixel_array);
 
@@ -432,87 +432,67 @@ void FilterBlur(
     BmpInfoHeader *bmp_info_header,
     Pixel *pixel_array)
 {
+  int32_t height_in_pixel = bmp_info_header->height_in_pixel;
+  
+  if (height_in_pixel < 0) height_in_pixel *= -1;
+
+  Pixel *buffer = (Pixel *)calloc(
+                              bmp_info_header->width_in_pixel * height_in_pixel,
+                              sizeof(Pixel));
+
   Pixel *pixel_ptr = NULL;
 
   uint16_t average_blue;
   uint16_t average_green;
   uint16_t average_red;
 
-  int32_t height_in_pixel = bmp_info_header->height_in_pixel;
-  
-  if (height_in_pixel < 0) height_in_pixel *= -1;
-
-  int32_t start_row, end_row;
-  int32_t start_coll, end_coll;
-
   for (int32_t row = 0; row < height_in_pixel; ++row)
   {
-    if (row == 0) 
-    {
-      start_row = 0;
-    }
-    else
-    {
-      start_row = row - 1;
-    }
-    
-    if (row == (height_in_pixel - 1))
-    {
-      end_row = row;
-    }
-    else
-    {
-      end_row = row + 1;
-    }
-
     for (int32_t coll = 0; coll < bmp_info_header->width_in_pixel; ++coll)
     {
-
-      if (coll == 0)
-      {
-        start_coll = 0;
-      }
-      else
-      {
-        start_coll = coll - 1;
-      }
-
-      if (coll == bmp_info_header->width_in_pixel - 1)
-      {
-        end_coll = coll;
-      }
-      else
-      {
-        end_coll = coll + 1;
-      }
-
       average_blue = 0;
       average_green = 0;
       average_red = 0;
 
       int8_t count = 0;
 
-      for (int i = start_row; i <= end_row; ++i)
+      for (int32_t i = row - 1, end_row = row + 1; i <= end_row; ++i)
       {
-        for (int j = start_coll; j <= end_coll; ++j)
+        for (int32_t j = coll - 1, end_coll = coll + 1; j <= end_coll; ++j)
         {
-          pixel_ptr = (pixel_array + (i * bmp_info_header->width_in_pixel) + j);
-          
-          average_blue += pixel_ptr->blue;
-          average_green += pixel_ptr->green;
-          average_red += pixel_ptr->red;
+          if ((i >= 0 && i < height_in_pixel) &&
+              (j >= 0 && j < bmp_info_header->width_in_pixel))
+          {
+            pixel_ptr = (pixel_array + (i * bmp_info_header->width_in_pixel) + j);
+            
+            average_blue += pixel_ptr->blue;
+            average_green += pixel_ptr->green;
+            average_red += pixel_ptr->red;
 
-          ++count;
+            ++count;
+          }
         }
       }
       
-      pixel_ptr = (pixel_array + (row * bmp_info_header->width_in_pixel) + coll);
+      pixel_ptr = (buffer + (row * bmp_info_header->width_in_pixel) + coll);
 
-      pixel_ptr->blue = (uint8_t)(average_blue / count);
-      pixel_ptr->green = (uint8_t)(average_green / count);
-      pixel_ptr->red = (uint8_t)(average_red / count);
+      pixel_ptr->blue = average_blue / count;
+      pixel_ptr->green = average_green / count;
+      pixel_ptr->red = average_red / count;
     }
   }
+
+  pixel_ptr = memcpy(pixel_array, buffer, 
+                    bmp_info_header->width_in_pixel * height_in_pixel * 
+                    sizeof(Pixel));
+
+  if (pixel_ptr != pixel_array)
+  {
+    printf ("Failed to copy memory!\n");
+  }
+
+  free(buffer);
+  buffer = NULL;
 
   pixel_ptr = NULL;
 }
