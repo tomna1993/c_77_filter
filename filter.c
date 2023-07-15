@@ -371,8 +371,7 @@ void FilterGrayscale(
     {
       pixel_ptr = (pixel_array + (row * bmp_info_header->width_in_pixel) + coll);
 
-      average = 0;
-      average = (pixel_ptr->blue + pixel_ptr->green + pixel_ptr->red) / (int8_t)sizeof(Pixel);
+      average = (pixel_ptr->blue + pixel_ptr->green + pixel_ptr->red) / sizeof(Pixel);
 
       pixel_ptr->blue = pixel_ptr->green = pixel_ptr->red = average;
     }
@@ -414,13 +413,9 @@ void FilterSepia(
                             (pixel_ptr->green * 0.769) +
                             (pixel_ptr->blue * 0.189));
 
-      if (sepia_blue > 0xFF) sepia_blue = 0xFF;
-      if (sepia_green > 0xFF) sepia_green = 0xFF;
-      if (sepia_red > 0xFF) sepia_red = 0xFF;
-
-      pixel_ptr->blue = sepia_blue;
-      pixel_ptr->green = sepia_green;
-      pixel_ptr->red = sepia_red;
+      pixel_ptr->blue = sepia_blue > 255 ? 255 : sepia_blue;
+      pixel_ptr->green = sepia_green > 255 ? 255 : sepia_green;
+      pixel_ptr->red = sepia_red > 255 ? 255 : sepia_red;
     }
   }
 
