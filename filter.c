@@ -7,8 +7,6 @@
 
 #define MAX_CHARS 50
 
-#define BYTES_IN_PIXEL 3
-
 typedef struct BmpFileHeader
 {
   int16_t header_field;
