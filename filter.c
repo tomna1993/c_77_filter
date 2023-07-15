@@ -1,3 +1,4 @@
+#include <math.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -74,6 +75,11 @@ void FilterBlur(
     BmpInfoHeader *bmp_info_header,
     Pixel *pixel_array);
 
+void FilterEdges( 
+    BmpFileHeader *bmp_file_header, 
+    BmpInfoHeader *bmp_info_header,
+    Pixel *pixel_array);
+
 int main(int argc, char **argv)
 {
   if (argc != 3)
@@ -113,7 +119,9 @@ int main(int argc, char **argv)
 
   // FilterSepia(&bmp_file_header, &bmp_info_header, pixel_array);
 
-  FilterBlur(&bmp_file_header, &bmp_info_header, pixel_array);
+  // FilterBlur(&bmp_file_header, &bmp_info_header, pixel_array);
+
+  FilterEdges(&bmp_file_header, &bmp_info_header, pixel_array);
 
   is_error = CreateBmp(file_out, &bmp_file_header, &bmp_info_header, pixel_array);
 
@@ -505,6 +513,97 @@ void FilterBlur(
       pixel_ptr->red = (uint8_t)(average_red / count);
     }
   }
+
+  pixel_ptr = NULL;
+}
+
+void FilterEdges( 
+    BmpFileHeader *bmp_file_header, 
+    BmpInfoHeader *bmp_info_header,
+    Pixel *pixel_array)
+{
+  int32_t height_in_pixel = bmp_info_header->height_in_pixel;
+  
+  if (height_in_pixel < 0) height_in_pixel *= -1;
+  
+  Pixel *pixel_ptr = NULL;
+
+  Pixel *buffer = (Pixel *)calloc(
+                              bmp_info_header->width_in_pixel * height_in_pixel,
+                              sizeof(Pixel));
+
+  int8_t gx[9] = {-1, 0 , 1, -2, 0, 2, -1, 0, 1};
+  int8_t gy[9] = {1, 2, 1, 0, 0, 0, -1, -2, -1};
+
+  int32_t gx_sum_blue, gy_sum_blue;
+  int32_t gx_sum_green, gy_sum_green;
+  int32_t gx_sum_red, gy_sum_red;
+
+  for (int32_t row = 0; row < height_in_pixel; ++row)
+  {
+    for (int32_t coll = 0; coll < bmp_info_header->width_in_pixel; ++coll)
+    {
+      gx_sum_blue = gy_sum_blue = 0;
+      gx_sum_green = gy_sum_green = 0;
+      gx_sum_red = gy_sum_red = 0;
+
+      int8_t count = 0;
+
+      for (int32_t i = row - 1, end_row = row + 1; i <= end_row; ++i)
+      {
+        for (int32_t j = coll - 1, end_coll = coll + 1; j <= end_coll; ++j)
+        {
+          if ((i >= 0 && i < height_in_pixel) &&
+              (j >= 0 && j < bmp_info_header->width_in_pixel))
+          {
+            pixel_ptr = (pixel_array + (i * bmp_info_header->width_in_pixel) + j);
+          
+            gx_sum_blue += (pixel_ptr->blue * gx[count]);
+            gx_sum_green += (pixel_ptr->green * gx[count]);
+            gx_sum_red += (pixel_ptr->red * gx[count]);
+
+            gy_sum_blue += (pixel_ptr->blue * gy[count]);
+            gy_sum_green += (pixel_ptr->green * gy[count]);
+            gy_sum_red += (pixel_ptr->red * gy[count]);
+          }
+          else
+          {
+            gx_sum_blue += 0;
+            gx_sum_green += 0;
+            gx_sum_red += 0;
+
+            gy_sum_blue += 0;
+            gy_sum_green += 0;
+            gy_sum_red += 0;
+          }
+
+          ++count;
+        }
+      }
+      
+      pixel_ptr = (buffer + (row * bmp_info_header->width_in_pixel) + coll);
+
+      gx_sum_blue = sqrt((gx_sum_blue * gx_sum_blue) + (gy_sum_blue * gy_sum_blue));
+      gx_sum_green = sqrt((gx_sum_green * gx_sum_green) + (gy_sum_green * gy_sum_green));
+      gx_sum_red = sqrt((gx_sum_red * gx_sum_red) + (gy_sum_red * gy_sum_red));
+
+      pixel_ptr->blue = gx_sum_blue > 255 ? 255 : gx_sum_blue;
+      pixel_ptr->green = gx_sum_green > 255 ? 255 : gx_sum_green;
+      pixel_ptr->red = gx_sum_red  > 255 ? 255 : gx_sum_red;
+    }
+  }
+
+  pixel_ptr = memcpy(pixel_array, buffer, 
+                    bmp_info_header->width_in_pixel * height_in_pixel * 
+                    sizeof(Pixel));
+
+  if (pixel_ptr != pixel_array)
+  {
+    printf ("Failed to copy memory!\n");
+  }
+
+  free(buffer);
+  buffer = NULL;
 
   pixel_ptr = NULL;
 }
