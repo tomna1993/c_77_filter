@@ -39,6 +39,15 @@ typedef struct Pixel
     uint8_t red;
 } Pixel;
 
+typedef enum EditMode
+{
+  grayscale = 1,
+  sepia,
+  blur,
+  edge,
+  save_and_exit
+} EditMode;
+
 int8_t ReadBmpHeader(
     const char file_in[MAX_CHARS], 
     BmpFileHeader *bmp_file_header, 
@@ -115,17 +124,75 @@ int main(int argc, char **argv)
 
   if (is_error == EXIT_FAILURE) return EXIT_FAILURE;
 
-  // FilterGrayscale(&bmp_file_header, &bmp_info_header, pixel_array);
+  EditMode user_input = save_and_exit;
 
-  // FilterSepia(&bmp_file_header, &bmp_info_header, pixel_array);
+  char input[MAX_CHARS] = { '\0' };
 
-  FilterBlur(&bmp_file_header, &bmp_info_header, pixel_array);
+  printf("\n");
+  printf("Grayscale: \t 1\n");
+  printf("Sepia: \t 2\n");
+  printf("Blur: \t 3\n");
+  printf("Edge: \t 4\n");
+  printf("Exit: \t 5\n");
+  printf("\n");
 
-  // FilterEdges(&bmp_file_header, &bmp_info_header, pixel_array);
+  do
+  {
+    do
+    {
+      printf("Select filter: \n");
 
-  is_error = CreateBmp(file_out, &bmp_file_header, &bmp_info_header, pixel_array);
+      fgets(input, MAX_CHARS - 1, stdin);
 
-  if (is_error == EXIT_FAILURE) return EXIT_FAILURE;
+      user_input = atoi(input);
+
+    } while (user_input < grayscale || user_input > save_and_exit);
+    
+
+    switch (user_input)
+    {
+      case grayscale:
+      {
+        FilterGrayscale(&bmp_file_header, &bmp_info_header, pixel_array);
+        break;
+      }
+    
+      case sepia:
+      {
+        FilterSepia(&bmp_file_header, &bmp_info_header, pixel_array);
+        break;
+      }
+
+      case blur:
+      {
+        FilterBlur(&bmp_file_header, &bmp_info_header, pixel_array);
+        break;
+      }
+
+      case edge:
+      {
+        FilterEdges(&bmp_file_header, &bmp_info_header, pixel_array);
+        break;
+      }
+
+      case save_and_exit:
+        break;
+
+      default:
+      { 
+        printf ("Wrong input, try again!\n");
+        break;
+      }
+    }
+
+    is_error = CreateBmp(file_out, &bmp_file_header, &bmp_info_header, pixel_array);
+  
+    if (is_error == EXIT_FAILURE) return EXIT_FAILURE;
+
+  } while (user_input != save_and_exit);
+
+  free(pixel_array);
+  pixel_array = NULL;
 
   return EXIT_SUCCESS;
 }
